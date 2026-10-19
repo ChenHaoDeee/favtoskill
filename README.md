@@ -1,4 +1,4 @@
-# favtoskill · 藏点本事
+# 藏点本事 · FavToSkill
 
 <img src="public/brand/app-icon-192.png" width="96" alt="藏点本事 App Logo" />
 
@@ -41,7 +41,7 @@ npm run start:api
 
 ## 设计依据
 
-[视觉语言规范 V1.0](docs/DESIGN_SYSTEM.md) 为用户提供的 FavToSkill（藏点本事）设计系统，后续品牌、页面和组件设计以此为参考。规范正文完整保留，统一了 Markdown 标题层级；色值、Design Tokens、组件规则和推荐文案未改动。
+[视觉语言规范 V1.0](docs/DESIGN_SYSTEM.md) 为用户提供的 藏点本事（FavToSkill）设计系统，后续品牌、页面和组件设计以此为参考。规范正文完整保留，统一了 Markdown 标题层级；色值、Design Tokens、组件规则和推荐文案未改动。
 
 当前界面已按青柠绿视觉体系收敛：首页分类、分类详情、Skill列表/详情及对话。涉及功能和导航的调整继续以 PRD 及用户已确认决策为准。
 
