@@ -1,0 +1,4 @@
+import 'dotenv/config';
+import {createApp} from '../server/app.js';import{createStore}from '../server/store.js';import{seedDemo}from '../server/seed.js';import{writeFileSync}from'node:fs';
+const demo=createStore(':memory:');seedDemo(demo);const app=await createApp(createStore(':memory:'),demo);const results=[];
+try{for(const content of ['帮我创建一个Skill','把我的AI生图方法收藏变成一个提示词优化Skill，输入原始提示词，输出优化后的版本和理由。']){const r=await app.inject({method:'POST',url:'/api/demo/skills/intent',payload:{mode:'real',context:{page:'knowledge',categoryId:'tech'},messages:[{role:'user',content}]}});const result=r.json();results.push({input:content,status:r.statusCode,result});console.log(JSON.stringify({status:r.statusCode,ready:result.ready,reply:result.reply}));if(r.statusCode!==200)process.exitCode=1}if(results[0].result.ready!==false||results[1].result.ready!==true)process.exitCode=1;writeFileSync('artifacts/skill-intent-live.json',JSON.stringify(results,null,2))}finally{await app.close()}

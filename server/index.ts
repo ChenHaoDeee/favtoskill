@@ -1,0 +1,10 @@
+import 'dotenv/config';
+import { createApp } from './app.js';
+import { createStore } from './store.js';
+import { seedDemo } from './seed.js';
+const demo=createStore('data/demo.sqlite');
+seedDemo(demo);
+const app=await createApp(createStore(),demo);
+await app.listen({port:Number(process.env.PORT||3001),host:'127.0.0.1'});
+console.log(`FavToSkill API listening at http://127.0.0.1:${process.env.PORT||3001}`);
+for(const signal of ['SIGINT','SIGTERM'] as const) process.on(signal,()=>{void app.close().then(()=>process.exit(0))});

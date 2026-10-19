@@ -1,0 +1,3 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+export default defineConfig({plugins:[react()],optimizeDeps:{include:['@icon-park/react/es/icons/Copy','@icon-park/react/es/icons/Folder','@icon-park/react/es/icons/Tips','@icon-park/react/es/icons/Help','@icon-park/react/es/icons/Share','@icon-park/react/es/icons/Like','@icon-park/react/es/icons/Comments','@icon-park/react/es/icons/PlayOne','@icon-park/react/es/icons/PauseOne','@icon-park/react/es/icons/Edit','@icon-park/react/es/icons/Plus','@icon-park/react/es/icons/SettingTwo','@icon-park/react/es/icons/Star','@icon-park/react/es/icons/FullScreenTwo','@icon-park/react/es/icons/OffScreenTwo']},server:{port:5173,strictPort:true,proxy:{'/api':'http://127.0.0.1:3001'}}});

@@ -1,0 +1,7 @@
+import type { Category, Knowledge, Skill } from '../shared/contracts';
+// Explicit, development-only visual fixtures. Never persisted or supplied as RAG evidence.
+const date='2026-10-18T08:00:00.000Z';
+export const previewCategories:Category[]=['求职面试','AI 工具','旅行攻略','学习资料'].map((name,i)=>({id:`preview-category-${i}`,name,createdAt:date}));
+const titles=[['项目介绍：先说问题，再讲你的选择','STAR 回答法：把经历说清楚','面试前准备清单','如何复盘一次项目冲突'],['AI 工具的选择与比较','把重复任务交给工作流'],['旅行前先确认这几件事','用预算规划一条旅行路线'],['读完一本书，留下三个问题','把学习笔记转成行动清单']];
+export const previewKnowledge:Knowledge[]=titles.flatMap((group,c)=>group.map((title,i)=>({id:`preview-knowledge-${c}-${i}`,title,originalText:`${title}。这是一条用于检查界面排版的示例资料，不属于真实收藏。`,summary:'先明确目标，再整理步骤，保留适用条件和参考来源。',keyPoints:['明确目标与适用情境','拆解可以执行的步骤','记录结果并持续调整'],categoryId:`preview-category-${c}`,tags:['方法','清单'],completeness:'fragment' as const,sourcePlatform:['文字笔记','图文片段'][i%2],createdAt:date,updatedAt:date})));
+export const previewSkills:Skill[]=[['面试准备助手','帮你梳理项目经历，组织回答思路。',0],['旅行规划助手','按照预算、时间与偏好，整理行程方案。',2],['学习复盘助手','从学习资料中提炼重点，形成行动清单。',3]].map(([name,description,category],i)=>({id:`preview-skill-${i}`,name:String(name),description:String(description),scenarios:['准备任务','梳理思路'],inputRequirements:'提供你的目标、背景与需要解决的问题。',steps:['明确任务目标与限制条件','选择相关收藏作为依据','按保存的方法组织结果','检查来源与适用范围'],outputFormat:'分步骤建议与行动清单',knowledgeIds:previewKnowledge.filter(k=>k.categoryId===`preview-category-${category}`).map(k=>k.id),limitations:['此条为布局示例，无法作为已生成的真实 Skill 运行。'],externalDependencies:[],createdAt:date,updatedAt:date}));

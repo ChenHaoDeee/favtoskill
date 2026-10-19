@@ -1,0 +1,7 @@
+export const shareDemoPosts=[
+  {id:'story-branches',title:'给故事留一个选择：AI 漫剧的分支叙事方法',author:'接着演 · 创作笔记',video:'/share-demo/story-main.mp4',cover:'/share-demo/story-main.jpg',caption:'如果换一种选择，故事会怎样继续？从人物目标、冲突和悬念开始，设计你的下一幕。',originalText:'【分享流程演示预设文字，不是视频识别或抖音抓取结果】\n设计分支故事时，可以先明确主角想完成的目标，以及阻碍目标的冲突。找到一个关键选择点，为不同选择分别写出可理解的后果。每条分支保留共同的人物动机，但改变行动和结果，让观众理解选择为什么重要。最后检查各分支是否回收前面的伏笔，并在结尾保留一个可继续展开的问题。',summary:'以人物目标和关键选择点组织故事，分别设计行动后果，再检查伏笔回收与后续悬念。',keyPoints:['明确人物目标与核心冲突','为关键选择设计不同后果','检查伏笔回收和后续悬念'],tags:['AI创作','叙事设计','分支故事'],categoryPattern:'科技|AI|创作|学习'},
+  {id:'character-motivation',title:'人物为什么这样选？用目标与代价塑造角色',author:'接着演 · 创作笔记',video:'/share-demo/branch-official.mp4',cover:'/share-demo/branch-official.jpg',caption:'一次有代价的选择，往往比一段背景介绍更能让人物被记住。',originalText:'【分享流程演示预设文字，不是视频识别或抖音抓取结果】\n设计故事角色时，先用一句话写清角色现在最想得到什么。再为这个目标设置需要付出的代价，让角色在两个有意义的选项之间行动。通过角色的选择展示性格，不只用旁白介绍性格。复查每个重要行动是否由既定目标推动，并检查行动的后果是否影响下一场戏。',summary:'通过目标、代价和选择展示人物性格，检查行动动机及其对后续剧情的影响。',keyPoints:['写清角色的当下目标','用选择和代价表现性格','检查行动后果如何推动下一幕'],tags:['人物塑造','故事创作','角色动机'],categoryPattern:'人文|阅读|知识|创作'}
+] as const;
+export type ShareDemoPost=typeof shareDemoPosts[number];
+export type ShareImportStatus='receiving'|'parsing'|'classifying'|'saved'|'failed'|'cancelled';
+export interface ShareImportJob{id:string;fixtureId:string;createdAt:string;status:ShareImportStatus;knowledgeId?:string;categoryId?:string|null;categoryName?:string;undoId?:string;duplicate?:boolean;error?:string;simulated:true}

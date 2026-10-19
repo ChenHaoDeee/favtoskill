@@ -1,0 +1,6 @@
+import 'dotenv/config';
+import {writeFileSync} from 'node:fs';
+import {createStore} from '../server/store.js';import {seedDemo} from '../server/seed.js';import {generateSkill,skillSchema} from '../server/workflows.js';
+const store=createStore(':memory:');seedDemo(store);const original=globalThis.fetch;let raw='';
+globalThis.fetch=async(...args)=>{const r=await original(...args);const j=await r.clone().json() as {choices?:{message?:{content?:string}}[]};raw=j.choices?.[0]?.message?.content||'';return r};
+try{const draft=await generateSkill(store,'基于收藏的AI生图方法，输入原始提示词，输出优化后的提示词及修改理由。',store.knowledge().filter(k=>k.categoryId==='tech'&&/生图|分享|Gemini/.test(k.title)).map(k=>k.id),'real');console.log(JSON.stringify({ok:true,name:draft.name}))}catch(e){let details:unknown;try{const value=JSON.parse(raw.trim().replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''));const result=skillSchema.safeParse(value);details=result.success?'valid schema':result.error.issues.map(i=>({path:i.path,code:i.code,message:i.message}));}catch{details={jsonParse:false,length:raw.length}}writeFileSync('artifacts/skill-format-diagnostic.json',JSON.stringify({details,raw},null,2));console.log(JSON.stringify({ok:false,error:(e as Error).message,details}))}finally{store.db.close()}

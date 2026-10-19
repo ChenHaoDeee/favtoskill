@@ -1,0 +1,20 @@
+node_modules/
+dist/
+dist-server/
+.env
+.env.*
+!.env.example
+data/
+*.log
+artifacts/
+.review/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.pem
+*.key
+.DS_Store
+Thumbs.db
+
+# Unfinished demo videos stay local and are excluded from distribution.
+public/share-demo/*.mp4
