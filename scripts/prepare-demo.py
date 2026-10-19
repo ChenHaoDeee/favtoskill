@@ -40,7 +40,7 @@ for file in sorted((root/'src/public/mock/skills').glob('*.md')):
         'scenarios':lines(section('核心能力'))[:3],'inputRequirements':'说明任务目标、个人背景与限制条件。',
         'steps':[section('核心指令') or '依据关联资料回答，注明来源和限制。'],
         'outputFormat':'结构化建议与引用来源','knowledgeIds':[x['id'] for x in items if x['categoryId']==category][:6],
-        'limitations':lines(section('约束条件'))+['旧项目预设 Skill；未核验的示例不能作为事实依据。当前不支持定时推送、联网追踪或第三方操作。'],
+        'limitations':lines(section('约束条件'))+['演示模板预设 Skill；未核验的示例不能作为事实依据。当前不支持定时推送、联网追踪或第三方操作。'],
         'externalDependencies':['外部执行或定时能力未接入'] if re.search('每天|推送|追踪',section('核心指令')) else [],
         'createdAt':'2026-10-18T00:00:00Z','updatedAt':'2026-10-18T00:00:00Z','origin':'preset','sourceMarkdown':content})
 # User-authorized unclassified demo samples; retain their original records and references.

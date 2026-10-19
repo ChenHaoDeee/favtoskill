@@ -28,6 +28,6 @@ export default function KnowledgeDetail({item}:{item:Knowledge}){
     </section>
     <section className="reading-card original-card" aria-label="原始内容"><header><h2>原始内容</h2>{sourceUrl?<a className="original-link" href={sourceUrl} target="_blank" rel="noreferrer">查看原文<ArrowUpRight size={16}/></a>:<small>原帖链接未提供</small>}</header><p className="saved-original">{original?(expanded?original:original.slice(0,300)+(long?'…':'')):'尚未保存文字原文。'}</p>{long&&<button className="text-button expand-original" aria-expanded={expanded} onClick={()=>setExpanded(!expanded)}>{expanded?'收起原文':'展开全部原文'}</button>}{item.completeness!=='complete'&&<p className="reading-note">仅保存了内容片段，可能有转录遗漏。</p>}</section>
     {item.provenance?.kind==='share-demo'&&<p className="reading-note demo-provenance">分享流程演示预设资料：文字、摘要和初始分类为示例，不是从抖音或视频解析得到。</p>}
-    {item.provenance?.kind==='demo'&&<p className="reading-note demo-provenance">演示资料：旧项目文字稿与封面；平台分配用于展示，不代表真实跨平台导入。</p>}
+    {item.provenance?.kind==='demo'&&<p className="reading-note demo-provenance">演示资料：来自预设演示模板；平台分配用于展示，不代表真实跨平台导入。</p>}
   </article>;
 }
