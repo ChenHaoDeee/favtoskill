@@ -7,6 +7,7 @@ import KnowledgeDetail from './components/KnowledgeDetail';
 import SkillDetail,{SkillEditor} from './components/SkillDetail';
 import ShareImportDemo from './components/ShareImportDemo';
 import AiStatus from './components/AiStatus';
+import DemoReset from './components/DemoReset';
 import BrandMark from './components/BrandMark';
 import { CategoryCard, CollectionCard, SkillCard } from './components/ContentCards';
 import { useVisualViewport } from './hooks/useVisualViewport';
@@ -25,12 +26,14 @@ export default function App(){
   const [categories,setCategories]=useState<Category[]>([]);const [knowledge,setKnowledge]=useState<Knowledge[]>([]);const [skills,setSkills]=useState<Skill[]>([]);
   const [health,setHealth]=useState<Health|null>(null);const [loading,setLoading]=useState(true);const [error,setError]=useState('');
   const [filter,setFilter]=useState('全部');const [query,setQuery]=useState('');const [searchOpen,setSearchOpen]=useState(false);
+  const [workspaceEpoch,setWorkspaceEpoch]=useState(0);
   const [settingsOpen,setSettingsOpen]=useState(false);
   const [launch,setLaunch]=useState<ChatLaunch|null>(null);const [notice,setNotice]=useState('');
   const [undoId,setUndoId]=useState<string>();const [organizing,setOrganizing]=useState(false);const [suggestions,setSuggestions]=useState<Suggestion[]>([]);const [aiMode,setAiMode]=useState<AiMode>(getMode());
   useEffect(()=>{const sync=()=>setAiMode(getMode());sync();addEventListener('storage',sync);addEventListener('focus',sync);return()=>{removeEventListener('storage',sync);removeEventListener('focus',sync)}},[]);
   function openAi(prompt?:string){if(prompt&&/深度整理|整理知识库|预览方案/.test(prompt)){setOrganizing(true);return}setLaunch({prompt,nonce:Date.now()})}
   function navigate(hash:string){location.hash=hash}
+  const phoneUrl=new URL(location.href);phoneUrl.searchParams.set('presentation','phone');
   const openImportDemo=()=>setImportOpen(true);
   function mutation(id:string,message:string){setUndoId(id);setNotice(message);void load()}
   async function undo(){if(!undoId)return;try{await write(`/undo/${undoId}`,{});setUndoId(undefined);setNotice('已撤回。');await load()}catch(e){setNotice((e as Error).message)}}
@@ -66,8 +69,8 @@ export default function App(){
       <div className="top-actions"><button className="icon-button settings-toggle" aria-label="服务设置" title={settingsOpen?'收起服务设置':'展开服务设置'} aria-expanded={settingsOpen} aria-controls="workspace-settings" onClick={()=>setSettingsOpen(!settingsOpen)}><Settings size={20}/></button><button className="icon-button" aria-label="搜索" aria-expanded={searchOpen} onClick={()=>setSearchOpen(!searchOpen)}><Search size={20}/></button><button className="icon-button" aria-label="导入知识" title="体验站外分享导入演示" onClick={openImportDemo}><FilePlus2 size={20}/></button></div>
     </header>}
     {view.categoryId&&<header className="category-topbar"><div className="category-nav-leading"><button className="icon-button" aria-label="返回知识库" onClick={()=>navigate('knowledge')}><ArrowLeft size={24}/></button></div><h1>{title}</h1><div className="category-nav-actions"><button className="icon-button" aria-label="搜索分类收藏" aria-expanded={searchOpen} onClick={()=>setSearchOpen(!searchOpen)}><Search size={20}/></button>{category&&<WorkspaceTools key={category.id} settingsOnly category={category} categories={categories} onMutation={mutation} onRemoved={()=>navigate('knowledge')}/>}</div></header>}
-    {!view.categoryId&&!view.knowledgeId&&!view.skillId&&settingsOpen&&(isDemo?<aside id="workspace-settings" className="preview-banner demo-banner"><span>预设演示模板 · 修改会保存</span><label>模式<select aria-label="AI 模式" value={aiMode} onChange={e=>{const value=e.target.value as AiMode;localStorage.setItem(AI_MODE_KEY,value);setAiMode(value)}}><option value="demo">离线演示（不调用模型）</option><option value="real">真实 AI</option></select></label><AiStatus/><a href="/#knowledge">个人库</a></aside>:<aside id="workspace-settings" className="preview-banner"><span>个人知识库</span><AiStatus/><a href="/?workspace=demo#knowledge">体验预设演示模板</a></aside>)}
-    {view.knowledgeId&&<header className="knowledge-topbar"><button className="icon-button" aria-label="返回所属分类" onClick={()=>navigate(item?`category/${item.categoryId||'unfiled'}`:'knowledge')}><ArrowLeft size={24}/></button><span>收藏详情</span><div>{item&&<WorkspaceTools key={item.id} settingsOnly item={item} categories={categories} onMutation={mutation} onRemoved={()=>navigate(`category/${item.categoryId||'unfiled'}`)}/>}</div></header>}
+    {!view.categoryId&&!view.knowledgeId&&!view.skillId&&settingsOpen&&(isDemo?<aside id="workspace-settings" className="preview-banner demo-banner"><span>预设演示模板 · 修改会保存</span><label>模式<select aria-label="AI 模式" value={aiMode} onChange={e=>{const value=e.target.value as AiMode;localStorage.setItem(AI_MODE_KEY,value);setAiMode(value)}}><option value="demo">离线演示（不调用模型）</option><option value="real">真实 AI</option></select></label><a href={phoneUrl.href} target="_top">手机演示</a><AiStatus/><DemoReset onReset={undoId=>{setAiMode(getMode());setOrganizing(false);setImportOpen(false);setLaunch(null);setWorkspaceEpoch(n=>n+1);setFilter('全部');setQuery('');mutation(undoId,'演示已刷新，三类整理场景已就绪，可撤回。');navigate('knowledge')}}/><a href="/#knowledge">个人库</a></aside>:<aside id="workspace-settings" className="preview-banner"><span>个人知识库</span><a href={phoneUrl.href} target="_top">手机演示</a><AiStatus/><a href="/?workspace=demo#knowledge">体验预设演示模板</a></aside>)}
+    {view.knowledgeId&&<header className="knowledge-topbar"><button className="icon-button" aria-label="返回所属分类" onClick={()=>navigate(item?`category/${item.categoryId||'unfiled'}`:'knowledge')}><ArrowLeft size={24}/></button><span>收藏详情</span><div>{item&&<WorkspaceTools key={item.id} settingsOnly item={item} onUpdateStaged={()=>setOrganizing(true)} categories={categories} onMutation={mutation} onRemoved={()=>navigate(`category/${item.categoryId||'unfiled'}`)}/>}</div></header>}
     {view.skillId&&<header className="skill-topbar"><button className="icon-button" aria-label="返回我的 Skill" onClick={()=>navigate('skills')}><ArrowLeft size={24}/></button><h1>{title}</h1><div>{skill&&<SkillEditor key={skill.id} skill={skill} knowledge={allKnowledge} onMutation={mutation} onRemoved={()=>navigate('skills')}/>}</div></header>}
     <main>
 
@@ -90,8 +93,8 @@ export default function App(){
       </>}
 
     </main>
-    <ShareImportDemo open={importOpen} onClose={()=>{setImportOpen(false);if(location.hash==='#share-demo')navigate('knowledge')}} onSaved={(job,undo,message)=>{if(isDemo){setUndoId(undo);setNotice(message||(job.duplicate?'这条演示资料已收录，未重复保存。':'演示资料已保存到知识库。'));void load()}}} onView={id=>{setImportOpen(false);if(isDemo)navigate(`item/${id}`);else location.assign(`/?workspace=demo#item/${id}`)}}/>
-    <ChatPanel key={aiMode} context={{page:view.page,categoryId:view.categoryId,knowledgeId:view.knowledgeId,skillId:view.skillId}} configured={health?.aiConfigured??null} launch={launch} knowledge={knowledge} skills={skills} onSaved={()=>void load()} onOrganize={()=>setOrganizing(true)} onSourceOpen={id=>navigate(`item/${id}`)} onSkillOpen={id=>navigate(`skills/${id}`)}/>
+    <ShareImportDemo key={workspaceEpoch} open={importOpen} onClose={()=>{setImportOpen(false);if(location.hash==='#share-demo')navigate('knowledge')}} onSaved={(job,undo,message)=>{if(isDemo){setUndoId(undo);setNotice(message||(job.duplicate?'这条演示资料已收录，未重复保存。':'演示资料已保存到知识库。'));void load()}}} onView={id=>{setImportOpen(false);if(isDemo)navigate(`item/${id}`);else location.assign(`/?workspace=demo#item/${id}`)}}/>
+    <ChatPanel key={`${aiMode}-${workspaceEpoch}`} context={{page:view.page,categoryId:view.categoryId,knowledgeId:view.knowledgeId,skillId:view.skillId}} configured={health?.aiConfigured??null} launch={launch} knowledge={knowledge} skills={skills} onSaved={()=>void load()} onOrganize={()=>setOrganizing(true)} onSourceOpen={id=>navigate(`item/${id}`)} onSkillOpen={id=>navigate(`skills/${id}`)}/>
     {organizing&&<OrganizePanel categoryId={view.categoryId} categories={categories} knowledge={knowledge} onClose={()=>setOrganizing(false)} onMutation={mutation}/>}{notice&&<div className="toast" role="status">{notice}{undoId&&<button onClick={()=>void undo()}>撤回</button>}<button aria-label="关闭提示" onClick={()=>setNotice('')}><X size={18}/></button></div>}
   </div>;
 }

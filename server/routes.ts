@@ -9,6 +9,8 @@ import { semanticRetrieve,isEmbeddingConfigured } from './semantic.js';
 import { registerImports,isLinkImportConfigured } from './imports.js';
 import type { Store } from './store.js';
 import { organizeExtras,applyOrganizePlan } from './organize.js';
+import { registerUpdates,pendingUpdates } from './knowledgeUpdates.js';
+import { registerDemoReset } from './demoReset.js';
 import { registerShareDemo } from './shareDemo.js';
 import { skillArchive } from './skillArchive.js';
 import { assistantIntent } from './assistantIntent.js';
@@ -22,8 +24,8 @@ const modeSchema=z.enum(['demo','real']).optional();
 const categoryFields={name:z.string().trim().min(1).max(40),icon:z.enum(CATEGORY_ICONS).nullable().optional(),tone:z.enum(CATEGORY_TONES).nullable().optional()};
 export async function registerRoutes(app:FastifyInstance,store:Store,workspace:'demo'|'personal'){
   const active=new Set<string>();
-  registerImports(app,store);
-  if(workspace==='demo')registerShareDemo(app,store);
+  registerImports(app,store);registerUpdates(app,store);
+  if(workspace==='demo'){registerShareDemo(app,store);registerDemoReset(app,store)}
   const mode=(value?:AiMode):AiMode=>{
     const chosen=value||'real';
     if(chosen==='demo'&&workspace!=='demo')throw new ServiceError('DEMO_ONLY','规则/模板模式仅在演示库中可用。',400);
@@ -36,7 +38,7 @@ export async function registerRoutes(app:FastifyInstance,store:Store,workspace:'
   const params=(req:FastifyRequest)=>req.params as {id:string};
   const validateSources=(ids:string[])=>{if(new Set(ids).size!==ids.length||ids.some(id=>!store.knowledge().some(k=>k.id===id)))throw new ServiceError('INVALID_SOURCES','引用收藏不存在或重复。',400)};
   app.get('/health',async()=>({status:'ok',aiConfigured:isAiConfigured(),phase:2,workspace,embeddingConfigured:isEmbeddingConfigured(),model:process.env.AI_MODEL||null}));
-  app.get('/capabilities',async()=>({workspace,chat:{configured:isAiConfigured()},retrieval:{lexical:true,semanticConfigured:isEmbeddingConfigured()},imports:{text:true,douyin:{implemented:true,configured:isLinkImportConfigured(),content:'post_caption',requires:'TIKHUB_API_KEY'},xiaohongshu:false,bilibili:false,videoTranscription:false,imageOcr:false},nativeShare:false,authentication:false}));
+  app.get('/capabilities',async()=>({workspace,chat:{configured:isAiConfigured()},retrieval:{lexical:true,semanticConfigured:isEmbeddingConfigured()},imports:{text:true,douyin:{implemented:true,configured:isLinkImportConfigured(),content:'post_caption',requires:'TIKHUB_API_KEY'},xiaohongshu:false,bilibili:false,videoTranscription:false,imageOcr:false},organize:{classification:true,exactDuplicates:true,updates:{manual:true,tikhubCaption:true,automaticPolling:false}},demoReset:workspace==='demo',nativeShare:false,authentication:false}));
   app.post('/ai/check',async()=>{const started=Date.now();await complete([{role:'user',content:'Reply with OK only.'}]);return {ok:true,latencyMs:Date.now()-started}});
   app.get('/categories',async()=>({items:store.categories()}));
   app.post('/categories/:id/overview',async req=>{const body=z.object({mode:modeSchema}).parse(req.body||{});if(mode(body.mode)==='demo')return {mode:'demo',overview:''};return categoryOverview(store,params(req).id)});
@@ -74,11 +76,11 @@ export async function registerRoutes(app:FastifyInstance,store:Store,workspace:'
     const seen=new Set<string>();for(const move of moves){const current=requireItem(move.knowledgeId);categoryExists(move.categoryId);if(seen.has(move.knowledgeId))throw new ServiceError('INVALID_PLAN','整理方案含重复记录。',502);seen.add(move.knowledgeId);if(!inScope(current))throw new ServiceError('INVALID_PLAN','整理建议超出了当前分类。',502)}
     moves=moves.filter(m=>requireItem(m.knowledgeId).categoryId!==m.categoryId&&inScope(requireItem(m.knowledgeId)));
     const plan:OrganizePlan={id:randomUUID(),version,mode:chosen,moves,duplicates:duplicates(store).filter(pair=>!body.categoryId||(inScope(requireItem(pair.firstId))&&inScope(requireItem(pair.secondId))))};
-    Object.assign(plan,organizeExtras(store,plan.duplicates,body.categoryId),{analyzedCount:store.knowledge().filter(inScope).length});
+    Object.assign(plan,{updates:pendingUpdates(store,body.categoryId)},organizeExtras(store,plan.duplicates,body.categoryId),{analyzedCount:store.knowledge().filter(inScope).length});
     store.db.prepare('INSERT INTO plans VALUES(?,?)').run(plan.id,JSON.stringify(plan));return plan;
   });
   app.post('/organize/plans/:id/apply',async req=>{
-    const body=z.object({confirmed:z.literal(true),moves:z.array(z.object({knowledgeId:z.string(),categoryId:z.string().nullable(),reason:z.string()})).max(100),duplicates:z.array(z.object({groupId:z.string(),keepId:z.string()})).max(100).default([]),merges:z.array(z.object({sourceId:z.string(),targetId:z.string()})).max(100).default([])}).parse(req.body);
+    const body=z.object({confirmed:z.literal(true),moves:z.array(z.object({knowledgeId:z.string(),categoryId:z.string().nullable(),reason:z.string()})).max(100),duplicates:z.array(z.object({groupId:z.string(),keepId:z.string()})).max(100).default([]),merges:z.array(z.object({sourceId:z.string(),targetId:z.string()})).max(100).default([]),updates:z.array(z.string()).max(100).default([])}).parse(req.body);
     const row=store.db.prepare('SELECT body FROM plans WHERE id=?').get(params(req).id);
     if(!row)throw new ServiceError('NOT_FOUND','整理方案不存在。',404);
     return applyOrganizePlan(store,JSON.parse(row.body as string) as OrganizePlan,body);

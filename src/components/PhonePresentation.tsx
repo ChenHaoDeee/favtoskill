@@ -1,0 +1,12 @@
+import { useEffect,useRef,useState } from 'react';
+const devices=[{name:'标准手机',width:390,height:844},{name:'大屏手机',width:430,height:932},{name:'紧凑手机',width:375,height:812}];
+export default function PhonePresentation(){
+  const [device,setDevice]=useState(0),[room,setRoom]=useState({width:window.innerWidth,height:window.innerHeight});
+  const frame=useRef<HTMLIFrameElement>(null);const cleanup=useRef<(()=>void)|undefined>(undefined);
+  const [source]=useState(()=>{const url=new URL(location.href);url.searchParams.delete('presentation');return url.href});
+  useEffect(()=>{const resize=()=>setRoom({width:window.innerWidth,height:window.innerHeight});addEventListener('resize',resize);return()=>{removeEventListener('resize',resize);cleanup.current?.()}},[]);
+  const selected=devices[device],scale=Math.max(.1,Math.min(1,(room.width-40)/(selected.width+16),(room.height-104)/(selected.height+16)));
+  function loaded(){cleanup.current?.();const inner=frame.current?.contentWindow;if(!inner)return;const sync=()=>{const url=new URL(location.href);url.hash=inner.location.hash;history.replaceState(null,'',url)};sync();inner.addEventListener('hashchange',sync);cleanup.current=()=>inner.removeEventListener('hashchange',sync)}
+  const desktop=new URL(location.href);desktop.searchParams.delete('presentation');
+  return <div className="phone-presentation"><header className="phone-presentation-toolbar"><span className="phone-presentation-label">手机演示</span><label><span className="phone-control-label">屏幕</span><select aria-label="演示手机尺寸" value={device} onChange={e=>setDevice(Number(e.target.value))}>{devices.map((d,i)=><option key={d.name} value={i}>{d.name} · {d.width} × {d.height}</option>)}</select></label><span className="phone-presentation-scale">{Math.round(scale*100)}%</span><a href={desktop.href} onClick={e=>{e.preventDefault();const url=new URL(location.href);url.searchParams.delete('presentation');location.assign(url.href)}}>桌面版</a></header><div className="phone-presentation-stage"><div className="phone-presentation-bounds" style={{width:(selected.width+16)*scale,height:(selected.height+16)*scale}}><div className="phone-presentation-device" style={{width:selected.width+16,height:selected.height+16,transform:`scale(${scale})`}}><iframe data-phone-viewport="true" ref={frame} title="藏点本事手机演示" src={source} width={selected.width} height={selected.height} onLoad={loaded}/></div></div></div></div>;
+}

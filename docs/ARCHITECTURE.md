@@ -192,3 +192,11 @@ OrganizePanel独立组件，原WorkspaceTools保留导出兼容。OrganizePlan�
 - TikHub固定HTTPS官方主机、Bearer服务端密钥、30秒超时、不跟随重定向；分享输入仅允许抖音作品HTTPS域名/路径。code非200、空data/缺少作品ID或文案、HTTP错误都不写入收藏；不自动重试计费请求。仅映射post_caption，不下载媒体，不声称ASR/OCR已完成。
 - 文本与文案完整性均保守设fragment、保留provenance、summary/keyPoints为空，之后由已有AI解析接口生成，禁止把截断文案冒充AI摘要。确认默认未分类，分类由调用方选择，未接入自动分类流水线。
 - semantic.ts新增AI_EMBEDDING_API_KEY，异平台不回用AI_API_KEY；校验端点、阈值、索引顺序、零向量、返回维度与缓存维度。缺模型保持关键词检索；配置错误/服务异常明确报错。
+
+
+## 演示重置与原文更新（2026-10-19）
+- server/demoReset.ts：仅demo注册POST /demo/reset（完整地址/api/demo/demo/reset），confirmed=true；在Store.mutate中恢复预设分类/收藏/Skill、轮换未分类项目和平台配色、加重复副本与一个明确模拟的新版本；不修改个人库和.env，保留历史消息；取消尚未完成的模拟分享任务。reset返回undoId，后续写入仍受版本保护。
+- server/knowledgeUpdates.ts：POST /knowledge/:id/updates/preview接受kind=text/text或kind=source。后者只支持TikHub导入文案，使用已有原帖URL，作品ID一致才暂存；缺配置不伪造更新。新旧内容暂存knowledge_updates，不立即覆盖原文；暂存提高revision，旧方案拒绝应用。
+- 整理plan追加updates，按当前分类范围及beforeText指纹匹配，只显示每条资料最新候选。apply仅接受预览中ID，禁止重复/过期/同时更新被收起的副本。新原文与其他整理同事务写入，清空summary/keyPoints，保守fragment，摘要缓存按内容指纹失效；返回reviewSkillIds，但不自动改写Skill规则。
+- undo快照同时包含knowledge_updates，支持撤回更新后恢复候选、撤回重置后恢复原资料与原候选。重置的状态种子标记保留，避免后端重启覆盖用户操作。
+- 资料编辑内“补充/更新原文”可以手动暂存，并打开同一整理确认界面；TikHub来源另有“检查原帖文案更新”。没有定时自动抓取、ASR、OCR或语义多文融合。

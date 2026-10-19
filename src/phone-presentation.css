@@ -1,0 +1,15 @@
+html[data-phone-presentation="true"]{scrollbar-gutter:auto;background:#e9ece5;--dock-space:0px}
+html[data-phone-presentation="true"] body{overflow:hidden}
+.phone-presentation{position:fixed;inset:0;display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% 38%,#f7f9ef,#e8ece4);color:var(--color-text-primary)}
+.phone-presentation-toolbar{display:flex;align-items:center;justify-content:center;gap:16px;min-height:64px;padding:10px 20px;flex-shrink:0;font-size:13px}
+.phone-presentation-label{font-weight:600}.phone-presentation-toolbar label{display:flex;align-items:center;gap:8px}.phone-presentation-toolbar select{min-height:40px;padding:6px 12px;border:1px solid var(--color-border-default);border-radius:12px;color:var(--color-text-primary);background:#ffffffb3;font:inherit}
+.phone-presentation-scale{color:var(--color-text-secondary);min-width:34px;font-variant-numeric:tabular-nums}.phone-presentation-toolbar a{display:flex;align-items:center;min-height:44px;padding:0 8px;color:var(--color-text-secondary)}
+.phone-presentation-stage{display:flex;align-items:center;justify-content:center;flex:1;min-height:0;padding:8px 20px 24px}
+.phone-presentation-bounds{position:relative;flex-shrink:0}.phone-presentation-device{position:absolute;inset:0 auto auto 0;padding:8px;border-radius:40px;background:#202620;transform-origin:top left;box-shadow:0 20px 64px #26301d2e,0 4px 10px #26301d1c}
+.phone-presentation-device iframe{display:block;border:0;border-radius:32px;background:var(--color-bg-primary);color-scheme:light}
+@media(max-width:540px){.phone-presentation-toolbar{gap:8px;padding-inline:8px;font-size:12px}.phone-control-label,.phone-presentation-scale{display:none}.phone-presentation-toolbar select{padding-inline:8px}}
+
+/* Keep scrolling available while matching the clean phone viewport. */
+html[data-phone-viewport="true"]{scrollbar-gutter:auto}
+html[data-phone-viewport="true"],html[data-phone-viewport="true"] *{scrollbar-width:none}
+html[data-phone-viewport="true"]::-webkit-scrollbar,html[data-phone-viewport="true"] *::-webkit-scrollbar{display:none;width:0;height:0}

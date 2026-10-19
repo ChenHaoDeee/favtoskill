@@ -24,7 +24,7 @@ export function createStore(path=resolve('data/favtoskill.sqlite')) {
   const categories=()=>db.prepare('SELECT id,name,created_at AS createdAt,icon,tone FROM categories WHERE deleted_at IS NULL ORDER BY created_at').all() as unknown as Category[];
   const knowledge=()=>db.prepare('SELECT body FROM knowledge WHERE deleted_at IS NULL').all().map(r=>JSON.parse(r.body as string) as Knowledge);
   const skills=()=>db.prepare('SELECT body FROM skills WHERE deleted_at IS NULL').all().map(r=>JSON.parse(r.body as string) as Skill);
-  const snapshot=()=>JSON.stringify(Object.fromEntries(['categories','knowledge','skills'].map(t=>[t,db.prepare(`SELECT * FROM ${t}`).all()])));
+  const snapshot=()=>JSON.stringify(Object.fromEntries(['categories','knowledge','skills',...(db.prepare("SELECT name FROM sqlite_master WHERE name='knowledge_updates'").get()?['knowledge_updates']:[])].map(t=>[t,db.prepare(`SELECT * FROM ${t}`).all()])));
   const mutate=(fn:(undoId:string)=>void)=>{
     db.exec('BEGIN IMMEDIATE');
     try {const before=snapshot();const undoId=randomUUID();fn(undoId);const next=revision()+1;db.prepare("UPDATE state SET value=? WHERE key='revision'").run(String(next));db.prepare('INSERT INTO undo VALUES(?,?,?)').run(undoId,before,next);db.exec('COMMIT');return undoId}
@@ -39,7 +39,7 @@ export function createStore(path=resolve('data/favtoskill.sqlite')) {
       if(!row||row.revision!==revision())return false;
       const data=JSON.parse(row.snapshot) as Record<string,Record<string,string|null>[]>;
       db.exec('BEGIN IMMEDIATE');
-      try {for(const table of ['categories','knowledge','skills']){db.exec(`DELETE FROM ${table}`);for(const record of data[table]){const keys=Object.keys(record);db.prepare(`INSERT INTO ${table}(${keys.join(',')}) VALUES(${keys.map(()=>'?').join(',')})`).run(...keys.map(k=>record[k]))}}db.prepare("UPDATE state SET value=? WHERE key='revision'").run(String(revision()+1));db.prepare('DELETE FROM undo WHERE id=?').run(id);db.exec('COMMIT');return true}catch(e){db.exec('ROLLBACK');throw e}
+      try {for(const table of ['categories','knowledge','skills',...(data.knowledge_updates?['knowledge_updates']:[])]){db.exec(`DELETE FROM ${table}`);for(const record of data[table]){const keys=Object.keys(record);db.prepare(`INSERT INTO ${table}(${keys.join(',')}) VALUES(${keys.map(()=>'?').join(',')})`).run(...keys.map(k=>record[k]))}}db.prepare("UPDATE state SET value=? WHERE key='revision'").run(String(revision()+1));db.prepare('DELETE FROM undo WHERE id=?').run(id);db.exec('COMMIT');return true}catch(e){db.exec('ROLLBACK');throw e}
     },
     conversations:()=>db.prepare('SELECT id,title,created_at AS createdAt FROM conversations ORDER BY created_at DESC LIMIT 100').all() as unknown as Conversation[],
     messages:(id:string)=>db.prepare('SELECT id,role,content,sources,created_at AS createdAt FROM messages WHERE conversation_id=? ORDER BY rowid').all(id).map(r=>({...r,sources:JSON.parse(r.sources as string)})) as unknown as Message[],

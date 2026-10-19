@@ -16,5 +16,6 @@ export interface OrganizeDuplicateGroup { id:string;knowledgeIds:string[];recomm
 export interface OrganizeCategoryMerge { sourceId:string;targetId:string;reason:string }
 export interface OrganizeDuplicateGroup { id:string;knowledgeIds:string[];recommendedKeepId:string;reason:string }
 export interface OrganizeCategoryMerge { sourceId:string;targetId:string;reason:string }
-export interface OrganizePlan { id:string;version:number;mode:AiMode;moves:OrganizeMove[];duplicates:{firstId:string;secondId:string}[];duplicateGroups?:OrganizeDuplicateGroup[];categoryMerges?:OrganizeCategoryMerge[];analyzedCount?:number }
+export interface KnowledgeUpdate { id:string;knowledgeId:string;beforeText:string;afterText:string;source:'manual'|'tikhub'|'demo';note:string }
+export interface OrganizePlan { id:string;version:number;mode:AiMode;moves:OrganizeMove[];duplicates:{firstId:string;secondId:string}[];duplicateGroups?:OrganizeDuplicateGroup[];categoryMerges?:OrganizeCategoryMerge[];updates?:KnowledgeUpdate[];analyzedCount?:number }
 export interface Suggestion { id:string;kind:'duplicate'|'update'|'review';title:string;reason:string;knowledgeIds:string[];skillId?:string;categoryId?:string }

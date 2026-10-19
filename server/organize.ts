@@ -31,7 +31,7 @@ export function organizeExtras(store:Store,pairs:OrganizePlan['duplicates'],cate
   return {duplicateGroups,categoryMerges};
 }
 
-export function applyOrganizePlan(store:Store,plan:OrganizePlan,body:{moves:OrganizeMove[];duplicates:{groupId:string;keepId:string}[];merges:{sourceId:string;targetId:string}[]}){
+export function applyOrganizePlan(store:Store,plan:OrganizePlan,body:{moves:OrganizeMove[];duplicates:{groupId:string;keepId:string}[];merges:{sourceId:string;targetId:string}[];updates?:string[]}){
   if(plan.version!==store.revision())throw new ServiceError('PLAN_STALE','资料已有变化，请重新生成整理方案。',409);
   const items=store.knowledge(),categories=store.categories();
   const invalid=()=>{throw new ServiceError('INVALID_PLAN','不在预览范围内、来源不存在或包含冲突的修改。',400)};
@@ -52,9 +52,16 @@ export function applyOrganizePlan(store:Store,plan:OrganizePlan,body:{moves:Orga
     selectedGroups.add(choice.groupId);
     for(const id of group!.knowledgeIds)if(id!==choice.keepId)replacements.set(id,choice.keepId);
   }
+  const selectedUpdates=body.updates||[];
+  if(new Set(selectedUpdates).size!==selectedUpdates.length)invalid();
+  for(const id of selectedUpdates){
+    const update=plan.updates?.find(u=>u.id===id);
+    if(!update||replacements.has(update.knowledgeId)||!items.some(k=>k.id===update.knowledgeId&&k.originalText===update.beforeText))invalid();
+  }
   const now=new Date().toISOString();
   const undoId=store.mutate(()=>{
     const next=new Map(items.map(k=>[k.id,{...k}]));
+    for(const id of selectedUpdates){const update=plan.updates!.find(u=>u.id===id)!;const item=next.get(update.knowledgeId)!;item.originalText=update.afterText;item.completeness='fragment';item.summary='';item.keyPoints=[];item.updatedAt=now;if(item.provenance)item.provenance={...item.provenance,textKind:update.source==='demo'?'preset_updated_text':update.source==='manual'?'user_supplied_text':'post_caption'};}
     for(const move of body.moves){const item=next.get(move.knowledgeId)!;item.categoryId=move.categoryId;item.updatedAt=now;}
     for(const merge of body.merges){
       for(const item of next.values())if(item.categoryId===merge.sourceId){item.categoryId=merge.targetId;item.updatedAt=now;}
@@ -65,5 +72,5 @@ export function applyOrganizePlan(store:Store,plan:OrganizePlan,body:{moves:Orga
     // Rebind live Skills to the retained copy, avoiding missing-source errors.
     for(const skill of store.skills())if(skill.knowledgeIds.some(id=>replacements.has(id)))store.putSkill({...skill,knowledgeIds:[...new Set(skill.knowledgeIds.map(id=>replacements.get(id)||id))],updatedAt:now});
   });
-  return {undoId,applied:{moves:body.moves.length,duplicates:body.duplicates.length,merges:body.merges.length}};
+  return {undoId,reviewSkillIds:store.skills().filter(s=>s.knowledgeIds.some(id=>plan.updates?.some(u=>selectedUpdates.includes(u.id)&&u.knowledgeId===id))).map(s=>s.id),applied:{moves:body.moves.length,duplicates:body.duplicates.length,merges:body.merges.length,updates:selectedUpdates.length}};
 }
